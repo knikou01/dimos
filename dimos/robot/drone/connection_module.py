@@ -172,18 +172,17 @@ class DroneConnectionModule(Module):
 
     def _publish_tf(self, msg: PoseStamped) -> None:
         """Publish odometry and TF transforms."""
-        self._odom = msg
-
-        # Publish odometry
-        nav_msg = PoseStamped(
+        self._odom = PoseStamped(
             position=Vector3(msg.position.x, msg.position.y, 0.0),
             orientation=msg.orientation,
             frame_id=msg.frame_id,
             ts=msg.ts,
         )
+
+        nav_msg = self._odom
         self.odom.publish(nav_msg)
 
-        # Publish base_link transform
+        # Keep real z for TF so Rerun draws the drone at correct altitude
         base_link = Transform(
             translation=msg.position,
             rotation=msg.orientation,
@@ -193,6 +192,7 @@ class DroneConnectionModule(Module):
         )
         self.tf.publish(base_link)
 
+        # Camera mounted on front of drone, no gimbal factored in yet
         camera_link = Transform(
             translation=Vector3(0.1, 0.0, -0.05),
             rotation=Quaternion(0.0, 0.0, 0.0, 1.0),
