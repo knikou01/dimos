@@ -175,7 +175,13 @@ class DroneConnectionModule(Module):
         self._odom = msg
 
         # Publish odometry
-        self.odom.publish(msg)
+        nav_msg = PoseStamped(
+            position=Vector3(msg.position.x, msg.position.y, 0.0),
+            orientation=msg.orientation,
+            frame_id=msg.frame_id,
+            ts=msg.ts,
+        )
+        self.odom.publish(nav_msg)
 
         # Publish base_link transform
         base_link = Transform(
@@ -187,10 +193,9 @@ class DroneConnectionModule(Module):
         )
         self.tf.publish(base_link)
 
-        # Publish camera_link transform (camera mounted on front of drone, no gimbal factored in yet)
         camera_link = Transform(
-            translation=Vector3(0.1, 0.0, -0.05),  # 10cm forward, 5cm down
-            rotation=Quaternion(0.0, 0.0, 0.0, 1.0),  # No rotation relative to base
+            translation=Vector3(0.1, 0.0, -0.05),
+            rotation=Quaternion(0.0, 0.0, 0.0, 1.0),
             frame_id="base_link",
             child_frame_id="camera_link",
             ts=time.time(),
